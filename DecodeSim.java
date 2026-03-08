@@ -19,8 +19,6 @@ public class DecodeSim extends OpMode {
     // Tuning constants
     double moveSpeed  = 0.035;
     double turnSpeed  = 0.003;
-    double accel      = 0.001;
-    double decel      = 0.002;
     double turnAccel  = 0.0005;
     double turnDecel  = 0.001;
 
@@ -102,9 +100,9 @@ public class DecodeSim extends OpMode {
         field.restore();
 
         // --- ROBOT UPDATES ---
-        redRobot.update(loopTimeMs, moveSpeed, turnSpeed, accel, decel, turnAccel, turnDecel,
+        redRobot.update(loopTimeMs, moveSpeed, turnSpeed, turnAccel, turnDecel,
                 gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
-        blueRobot.update(loopTimeMs, moveSpeed, turnSpeed, accel, decel, turnAccel, turnDecel,
+        blueRobot.update(loopTimeMs, moveSpeed, turnSpeed, turnAccel, turnDecel,
                 gamepad2.left_stick_x, gamepad2.left_stick_y, gamepad2.right_stick_x);
 
         field.drawRobot(redRobot.x,  redRobot.y,  redRobot.heading,  "#ef5350");
@@ -190,7 +188,7 @@ public class DecodeSim extends OpMode {
 
     static class Robot {
         double x, y, heading;
-        double velX = 0, velY = 0, velTurn = 0;
+        double velTurn = 0;
         String color;
         Artifact[] held = new Artifact[3];
         boolean isShooting = false;
@@ -206,20 +204,18 @@ public class DecodeSim extends OpMode {
         }
 
         void update(double dt, double moveSpeed, double turnSpeed,
-                    double accel, double decel, double turnAccel, double turnDecel,
+                    double turnAccel, double turnDecel,
                     float inputX, float inputY, float inputTurn) {
             double ix = Math.abs(inputX)    < 0.05 ? 0 : -inputX;
             double iy = Math.abs(inputY)    < 0.05 ? 0 : -inputY;
             double it = Math.abs(inputTurn) < 0.05 ? 0 : -inputTurn;
 
-            velX    = smooth(velX,    ix * moveSpeed, accel,     decel,     dt);
-            velY    = smooth(velY,    iy * moveSpeed, accel,     decel,     dt);
             velTurn = smooth(velTurn, it * turnSpeed, turnAccel, turnDecel, dt);
 
             heading += velTurn * dt;
             double cosH = Math.cos(heading), sinH = Math.sin(heading);
-            x += (velY * cosH - velX * sinH) * dt;
-            y += (velY * sinH + velX * cosH) * dt;
+            x += (iy * moveSpeed * cosH - ix * moveSpeed * sinH) * dt;
+            y += (iy * moveSpeed * sinH + ix * moveSpeed * cosH) * dt;
             x = Math.max(0, Math.min(143, x));
             y = Math.max(0, Math.min(143, y));
         }
